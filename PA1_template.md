@@ -10,7 +10,8 @@ output:
 Please make sure, that for this analysis the R-libraries **dplyr** and **ggplot2** are installed.  
 First the above mentioned libraries are loaded.
 
-```{r load libraries, warning=FALSE, message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 ```
@@ -21,7 +22,8 @@ For loading the data, the datafile **activity.zip** should be present in the cur
   
 If this is the case, the data can be unzipped and loaded into the dataframe `dat`.
 
-```{r load data}
+
+```r
 #Define filenames
 zipfile <- "./activity.zip"
 datfile <- "./activity.csv"
@@ -33,13 +35,25 @@ dat <- read.csv(datfile)
 &nbsp;
 
 The first 6 rows of the dataframe `dat` look like this:
-```{r}
+
+```r
 head(dat)
+```
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
 ```
 &nbsp;  
   
 Now the column `date` is converted to the data-type `Date`, which is useful for further processing.
-```{r}
+
+```r
 dat$date <- as.Date(dat$date) 
 ```
 &nbsp;  
@@ -48,7 +62,8 @@ dat$date <- as.Date(dat$date)
 
 To answer this question, first the total number of steps taken per day are calculated. NA-values should be ignored. Therefore all NA-values are filtered out, before grouping the data per day and summing up the steps.
 
-```{r calculate total number of steps taken per day}
+
+```r
 steps.per.date <- 
     dat %>%
     filter(!is.na(steps)) %>%
@@ -59,7 +74,8 @@ steps.per.date <-
 
 Second a histogram shows the total number of steps taken each day.
 
-```{r hist_total_steps}
+
+```r
 qplot(total, 
       data=steps.per.date, 
       geom="histogram", 
@@ -71,18 +87,29 @@ qplot(total,
       ylab="Count for binwidth=1000")
 ```
 
+![plot of chunk hist_total_steps](figure/hist_total_steps-1.png) 
+
 The mean and the median of the steps over all days is shown below.
-```{r Calculate mean and median, results="asis"}
+
+```r
 mean(steps.per.date$total)
+```
+
+[1] 10766.19
+
+```r
 median(steps.per.date$total)
 ```
+
+[1] 10765
 &nbsp;
 
 ## What is the average daily activity pattern?
 
 To answer this question, first a dataframe grouped by interval with the average value (mean) of steps across all days for this particular interval has to be calculated.
 
-```{r Calculate the average steps per interval over the given days}
+
+```r
 steps.per.interval <- 
     dat %>%
     filter(!is.na(steps)) %>%
@@ -93,7 +120,8 @@ steps.per.interval <-
 
 Based on this, a time-series plot can be produced. The time-series plot shows a 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
 
-```{r timeseries_interval}
+
+```r
 qplot(x=interval, 
       y=mean, 
       data=steps.per.interval, 
@@ -103,13 +131,16 @@ qplot(x=interval,
       xlab="\n5-minute intervals from 0:00 - 23:55 o'clock",
       ylab="Average amount of steps\n")
 ```
+
+![plot of chunk timeseries_interval](figure/timeseries_interval-1.png) 
 &nbsp;
 
 Now the 5-min-interval with the maximum average-number of steps is calculated:
-```{r max 5min-interval}
+
+```r
 maxInterval <- filter(steps.per.interval, mean==max(mean))
 ```
-The interval with the maximum average steps is interval **``r maxInterval$interval``** which counts in average **``r maxInterval$mean``** steps.
+The interval with the maximum average steps is interval **`835`** which counts in average **`206.1698113`** steps.
 &nbsp;
 
 ## Imputing missing values
@@ -118,16 +149,18 @@ In the given dataset several NA-values are present in the column **steps**. More
 
 The NA-values should be substituted. For this, first the amount of NA-values in the dataset is calculated.
 
-```{r count NA-values}
+
+```r
 countNA <- sum(!complete.cases(dat))  
 ```
 
-Currently there are **``r countNA``** NA-values in the dataset.  
+Currently there are **`2304`** NA-values in the dataset.  
 
 The NA-values present in the column **steps** for each day/interval will be substituted by the average (mean) of the corresponding interval across all the days having data for that particular interval.
 
 For doing this, a new dataframe is calculated.
-```{r substitute NA-values}
+
+```r
 dat.substNA <- dat %>%
     left_join(steps.per.interval, by="interval") %>%
     mutate(steps=ifelse(is.na(steps), mean, steps)) %>%
@@ -139,7 +172,8 @@ Again a histogram of the total number of steps taken each day should be created.
 
 First the dataframe `dat.substNA` containing the substituted NA's has to be aggregated by the given days.
 
-```{r Calculate total steps per day with substituted NAs}
+
+```r
 steps.per.date.substNA <- 
     dat.substNA %>%
     group_by(date) %>%
@@ -148,7 +182,8 @@ steps.per.date.substNA <-
 &nbsp;
 
 Then the histogram of the total number of steps per day can be drawn.
-```{r hist_total_steps_without_NA}
+
+```r
 qplot(total, 
       data=steps.per.date.substNA, 
       geom="histogram", 
@@ -160,10 +195,24 @@ qplot(total,
       ylab="Count for binwidth=1000")
 ```
 
+![plot of chunk hist_total_steps_without_NA](figure/hist_total_steps_without_NA-1.png) 
+
 The mean and the median of the steps over all days with substituted NA's is shown below.
-```{r}
+
+```r
 mean(steps.per.date.substNA$total)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(steps.per.date.substNA$total)
+```
+
+```
+## [1] 10766.19
 ```
 
 Comparing to the mean and median of the dataset including NA's, there is no big difference. Only the median of the new dataset including the substituted NA's is a little bit higher and now the same like the mean. The mean of the new dataset is still the same.
@@ -175,7 +224,8 @@ For answering this question, a panel plot will be created showing a time series 
 
 For this, first a new factor variable has to be created containing the information whether the day mentioned in the dataset is a weekday (Mo-Fr) or a weekend-day (Sa,So). As basis the dataframe `dat.substNA` including the substituted NA-values is taken.
 
-```{r Calculate dataset with new factor variable wd (weekday-indicator)}
+
+```r
 steps.per.interval.wd <- 
     dat.substNA %>%
     mutate(wd=as.factor(ifelse(strftime(date, "%u") %in% c(6,7), "weekend", "weekday"))) %>%
@@ -185,7 +235,8 @@ steps.per.interval.wd <-
 &nbsp;
 
 Then the plot can be drawn.
-```{r timeseries_panel}
+
+```r
 qplot(x=interval, 
       y=meanSteps, 
       data=steps.per.interval.wd, 
@@ -196,3 +247,5 @@ qplot(x=interval,
       xlab = "\n5-minute intervals from 0:00 - 23:55 o'clock",
       ylab="Average amount of steps\n")
 ```
+
+![plot of chunk timeseries_panel](figure/timeseries_panel-1.png) 
